@@ -32,12 +32,16 @@ app.get('/todos/:id', function(req, res){
 app.post('/todos', function(req,res){
 	var body = req.body;
 	if(body){
+		if( !_.isBoolean(body.completed) || !_.isString(body.description)){
+			res.status(400).send();
+		}
 		body.id = nextId;
 		todos.push(body);
 		nextId = nextId + 1;
+		res.json( _.pick(body,'description' , 'completed'));
+	}else {
+		res.status(404).send();
 	}
-	console.log('body',body);
-	res.json(body);
 });
 app.listen(PORT , function(){
 	console.log('Express server started on port :' + PORT);

@@ -30,7 +30,7 @@ app.get('/todos/:id', function(req, res){
 	}	
 });
 app.post('/todos', function(req,res){
-	var body = req.body;
+	var body = _.pick(req.body,'description' , 'completed');
 	if(body){
 		if( !_.isBoolean(body.completed) || !_.isString(body.description)){
 			res.status(400).send();
@@ -38,7 +38,7 @@ app.post('/todos', function(req,res){
 		body.id = nextId;
 		todos.push(body);
 		nextId = nextId + 1;
-		res.json( _.pick(body,'description' , 'completed'));
+		res.json(body);
 	}else {
 		res.status(404).send();
 	}
@@ -54,7 +54,30 @@ app.delete('/todos/:id',function(req,res){
 		res.json(todo);
 	}
 });
+app.put('/todos/:id',function(req,res){
+	var todoId = parseInt(req.params.id,10);
+	var body = _.pick(req.body,'description' , 'completed');
+	var todo = _.findWhere(todos,{id:todoId});
+	if(!todo){
+		return res.status(404).send();
+	}
+	var validAtttributes = {};
+	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+		validAtttributes.completed = body.completed
+	}else if(body.hasOwnProperty('completed')){
+		res.status(400).send()
+	}
+	if(body.hasOwnProperty('description') && _.isString(body.description)){
+		validAtttributes.description = body.description
+	}else if(body.hasOwnProperty('description')){
+		res.status(400).send()
+	}
+	_.extend(todo, validAtttributes);
+	res.json(todo);
 
+
+
+});
 app.listen(PORT , function(){
 	console.log('Express server started on port :' + PORT);
 

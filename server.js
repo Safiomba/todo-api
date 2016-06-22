@@ -1,5 +1,5 @@
 var express = require('express');
-var _=require('underscore');
+var _= require('underscore');
 var bodyParser = require('body-parser');
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -20,6 +20,11 @@ app.get('/todos', function(req,res){
 		filteredTodos = _.where(filteredTodos, {completed:true});
 	}else if(queryParams.hasOwnProperty('completed') && queryParams.completed ==='false'){
 		filteredTodos = _.where(filteredTodos, {completed:false});
+	}
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+		filteredTodos = _.filter(filteredTodos , function(todo){
+			return todo.description.indexOf(queryParams.q) > -1 ;
+		});
 	}
 	res.json(filteredTodos);
 

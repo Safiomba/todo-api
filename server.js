@@ -110,9 +110,15 @@ app.delete('/todos/:id', function(req, res) {
 	db.todo.destroy({
 		where
 	}).then(function(affectedRows) {
-		res.json(affectedRows);
+		if (affectedRows === 0) {
+			res.status(404).json({
+				"error": "no todo find with that id:" + todoId
+			});
+		} else {
+			res.status(204).send();
+		}
 	}, function(e) {
-		res.status(404).json({
+		res.status(500).json({
 			"error": "no todo find with that id"
 		});
 	});

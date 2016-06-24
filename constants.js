@@ -1,5 +1,6 @@
-
 module.exports = {
-	description :'description',
-	completed: 'completed'
+	description: 'description',
+	completed: 'completed',
+	email:'email',
+	password:'password'
 };

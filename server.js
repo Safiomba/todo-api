@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.get('/', function(req, res) {
 	res.send('Todo API Root !')
 });
-
+/*Todo CRUD operations*/
 app.get('/todos', function(req, res) {
 	var query = req.query;
 	var where = {};
@@ -111,7 +111,16 @@ app.put('/todos/:id', function(req, res) {
 		res.status(500).send();
 	});
 });
+/*user CRUD operations */
+app.post('/users', function(req, res) {
+	var body = _.pick(req.body, constants.email, constants.password);
+	db.user.create(body).then(function(user) {
+		res.json(user.toJSON());
+	}, function(e) {
+		res.status(400).json(e);
 
+	});
+});
 sequelize.sync().then(function() {
 	app.listen(PORT, function() {
 		console.log('Express server started on port :' + PORT);

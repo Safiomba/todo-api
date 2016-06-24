@@ -126,12 +126,12 @@ app.post('/users', function(req, res) {
 app.post('/users/login', function(req, res) {
 	var body = _.pick(req.body, CONSTANTS.EMAIL, CONSTANTS.PASSWORD);
 	db.user.authenticate(body).then(function(user) {
-		res.json(user.toPublicJSON());
+		res.header('Auth', user.generateToken('authentication')).json(user.toPublicJSON());
 	}, function() {
 		res.status(401).json();
 	})
 });
-sequelize.sync({force: true}).then(function() {
+sequelize.sync().then(function() {
 	app.listen(PORT, function() {
 		console.log('Express server started on port :' + PORT);
 

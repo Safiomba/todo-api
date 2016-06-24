@@ -6,19 +6,31 @@ module.exports = function(sequelize, DataTypes) {
 			unique: true,
 			validate: {
 				isEmail: true
-			}
+			},
 
 		},
 		password: {
 			type: DataTypes.STRING,
 			allowNull: false,
-			unique: true,
 			validate: {
 				len: [7, 100]
 			}
 
 		}
 
+	}, {
+		hooks: {
+			beforvalidate: function(user, options) {
+				if (typeof user.email === 'string') {
+					user.email = toLowerCase(user.email);
+				}
+			}/*,
+			beforeCreate: function(user, options) {
+				return hashPassword(user.password).then(function(hashedPw) {
+					user.password = hashedPw;
+				});
+			}*/
+		}
 
 	});
 }

@@ -1,7 +1,8 @@
 var express = require('express');
 var _ = require('underscore');
-var constants = require('./constants.js');
+var bcrypt = require('bcrypt-nodejs');
 var bodyParser = require('body-parser');
+var CONSTANTS = require('./constants.js');
 var db = require('./db.js');
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -19,10 +20,10 @@ app.get('/', function(req, res) {
 app.get('/todos', function(req, res) {
 	var query = req.query;
 	var where = {};
-	if (query.hasOwnProperty(constants.completed) && query.completed === 'true') {
+	if (query.hasOwnProperty(CONSTANTS.COMPLETED) && query.completed === 'true') {
 		where.completed = true;
 
-	} else if (query.hasOwnProperty(constants.completed) && query.completed === 'false') {
+	} else if (query.hasOwnProperty(CONSTANTS.COMPLETED) && query.completed === 'false') {
 		where.completed = false;
 	}
 	if (query.hasOwnProperty('q') && query.q.length > 0) {
@@ -58,7 +59,7 @@ app.get('/todos/:id', function(req, res) {
 	});
 });
 app.post('/todos', function(req, res) {
-	var body = _.pick(req.body, constants.description, constants.completed);
+	var body = _.pick(req.body, CONSTANTS.DESCRIPTION, CONSTANTS.COMPLETED);
 	db.todo.create(body).then(function(todo) {
 		res.json(todo.toJSON());
 	}, function(e) {
@@ -89,12 +90,12 @@ app.delete('/todos/:id', function(req, res) {
 });
 app.put('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	body = _.pick(req.body, constants.description, constants.completed);
+	body = _.pick(req.body, CONSTANTS.DESCRIPTION, CONSTANTS.COMPLETED);
 	var attributes = {};
-	if (body.hasOwnProperty(constants.completed)) {
+	if (body.hasOwnProperty(CONSTANTS.COMPLETED)) {
 		attributes.completed = body.completed
 	}
-	if (body.hasOwnProperty(constants.description)) {
+	if (body.hasOwnProperty(CONSTANTS.DESCRIPTION)) {
 		attributes.description = body.description
 	}
 	db.todo.findById(todoId).then(function(todo) {
@@ -113,7 +114,7 @@ app.put('/todos/:id', function(req, res) {
 });
 /*user CRUD operations */
 app.post('/users', function(req, res) {
-	var body = _.pick(req.body, constants.email, constants.password);
+	var body = _.pick(req.body, CONSTANTS.EMAIL, CONSTANTS.PASSWORD);
 	db.user.create(body).then(function(user) {
 		res.json(user.toPublicJSON());
 	}, function(e) {
@@ -121,7 +122,16 @@ app.post('/users', function(req, res) {
 
 	});
 });
-sequelize.sync().then(function() {
+/*User login*/
+app.post('/users/login', function(req, res) {
+	var body = _.pick(req.body, CONSTANTS.EMAIL, CONSTANTS.PASSWORD);
+	db.user.authenticate(body).then(function(user) {
+		res.json(user.toPublicJSON());
+	}, function() {
+		res.status(401).json();
+	})
+});
+sequelize.sync({force: true}).then(function() {
 	app.listen(PORT, function() {
 		console.log('Express server started on port :' + PORT);
 

@@ -2,5 +2,6 @@ module.exports = {
 	description: 'description',
 	completed: 'completed',
 	email:'email',
-	password:'password'
+	password:'password',
+	id:'id'
 };

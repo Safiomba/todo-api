@@ -21,12 +21,31 @@ var Todo = sequelize.define('todo', {
 	}
 
 });
+var User = sequelize.define('user',{
+	email : Sequelize.STRING
+
+});
+Todo.belongsTo(User);
+User.hasMany(Todo);
 
 sequelize.sync({
-	force: false
+	force: true
 }).then(function() {
 	console.log('Everythin is sync');
-	 Todo.findById(2).then(function(todo){
+	User.create({email:'ansou@gmail.com'}).then(function(){
+		return Todo.create({
+			description:'clean yard',
+			completed:false
+		});
+
+	}).then(function(todo){
+		User.findById(1).then(function(user){
+			console.log('user -->',user);
+			user.addTodo(todo);
+		})
+			
+	})
+	 /*Todo.findById(2).then(function(todo){
 	 	if (todo) {
 	 		console.log(todo.toJSON());
 	 	}else{
@@ -34,7 +53,7 @@ sequelize.sync({
 	 	}
 
 	 });
-	/*Todo.create({
+	Todo.create({
 		description: 'Go bed',
 		completed: false
 	}).then(function(todo) {

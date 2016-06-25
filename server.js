@@ -4,6 +4,7 @@ var bcrypt = require('bcrypt-nodejs');
 var bodyParser = require('body-parser');
 var CONSTANTS = require('./constants.js');
 var db = require('./db.js');
+var middleware = require('./middleware.js')(db);
 var app = express();
 var PORT = process.env.PORT || 3000;
 
@@ -17,7 +18,7 @@ app.get('/', function(req, res) {
 	res.send('Todo API Root !')
 });
 /*Todo CRUD operations*/
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
 	var query = req.query;
 	var where = {};
 	if (query.hasOwnProperty(CONSTANTS.COMPLETED) && query.completed === 'true') {
@@ -46,7 +47,7 @@ app.get('/todos', function(req, res) {
 	});
 
 });
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	db.todo.findById(todoId).then(function(todo) {
 		if (todo) {
@@ -58,7 +59,7 @@ app.get('/todos/:id', function(req, res) {
 		res.status(500).json(e);
 	});
 });
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication,  function(req, res) {
 	var body = _.pick(req.body, CONSTANTS.DESCRIPTION, CONSTANTS.COMPLETED);
 	db.todo.create(body).then(function(todo) {
 		res.json(todo.toJSON());
@@ -67,7 +68,7 @@ app.post('/todos', function(req, res) {
 
 	});
 });
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id',middleware.requireAuthentication, function(req, res) {
 
 	var todoId = parseInt(req.params.id, 10);
 	var where = {};
@@ -88,7 +89,7 @@ app.delete('/todos/:id', function(req, res) {
 		});
 	});
 });
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id',middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	body = _.pick(req.body, CONSTANTS.DESCRIPTION, CONSTANTS.COMPLETED);
 	var attributes = {};
@@ -128,7 +129,7 @@ app.post('/users/login', function(req, res) {
 	db.user.authenticate(body).then(function(user) {
 		var token = user.generateToken('authentication');
 		if (token) {
-			res.header('Auth', token).json(user.toPublicJSON());
+			res.set('Auth', token).json(user.toPublicJSON());
 		} else {
 			res.status(401).json();
 		}
@@ -137,7 +138,7 @@ app.post('/users/login', function(req, res) {
 		res.status(401).json();
 	})
 });
-sequelize.sync().then(function() {
+sequelize.sync({force:true}).then(function() {
 	app.listen(PORT, function() {
 		console.log('Express server started on port :' + PORT);
 

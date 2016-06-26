@@ -117,7 +117,9 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	if (body.hasOwnProperty(CONSTANTS.DESCRIPTION)) {
 		attributes.description = body.description
 	}
-	db.todo.findOne({where}).then(function(todo) {
+	db.todo.findOne({
+		where
+	}).then(function(todo) {
 		if (todo) {
 			todo.update(attributes).then(function(todo) {
 				res.json(todo.toJSON());
@@ -144,18 +146,28 @@ app.post('/users', function(req, res) {
 /*User login*/
 app.post('/users/login', function(req, res) {
 	var body = _.pick(req.body, CONSTANTS.EMAIL, CONSTANTS.PASSWORD);
+	var userInstance;
 	db.user.authenticate(body).then(function(user) {
 		var token = user.generateToken('authentication');
-		if (token) {
-			res.set('Auth', token).json(user.toPublicJSON());
-		} else {
-			res.status(401).json();
-		}
-
-	}, function() {
+		userInstance = user;
+		return db.token.create({
+			token: token
+		});
+	}).then(function(tokenInstance) {
+		res.header('Auth', tokenInstance.token).json(userInstance.toPublicJSON());
+	}).catch(function() {
 		res.status(401).json();
-	})
+	});
 });
+// DELETE users/login //
+app.delete('/users/login',middleware.requireAuthentication, function(req, res) {
+	req.token.destroy().then(function() {
+		res.status(204).send();
+	}).catch(function() {
+		res.status(500).send();
+	});
+});
+
 sequelize.sync({
 	force: true
 }).then(function() {
